@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> axios 的由来</title>
+    <!-- <script src="./node_modules/axios/dist/mine-axios.js"></script> -->
+</head>
+<body>
+    <script>
+        // Axios构造函数
+        function Axios(config) {
+            // 初始化
+            this.defaults = config; // 默认配置：为了能够使用axios.defaults.xxx来设置默认配置
+            this.interceptor = {
+                request: {}, // 请求拦截器
+                response: {} // 响应拦截器
+            }
+        }
+
+        // 给Axios原型对象添加request方法
+        Axios.prototype.request = function(config) {
+            console.log('发送 AJAX 请求，请求的类型为' + config.method);
+        }
+
+        // 给Axios原型对象添加get/post/put/delete方法
+        Axios.prototype.get = function(url, config) {
+            return this.request({
+                method: 'get',
+                url,
+                ...config
+            })
+        }
+        Axios.prototype.post = function(url, config) {
+            return this.request({
+                method: 'post',
+                url,
+                ...config
+            })
+        }
+        Axios.prototype.put = function(url, config) {
+            return this.request({
+                method: 'put',
+                url,
+                ...config
+            })
+        }
+        Axios.prototype.delete = function(url, config) {
+            return this.request({
+                method: 'delete',
+                url,
+                ...config
+            })
+        }
+
+        // 声明createInstance函数，用来创建axios对象
+        function createInstance(config) {
+            // 创建一个Axios实例
+            let context = new Axios(config); // context就是Axios的实例，它有Axios构造函数中的所有属性和方法。可以context.get()、context.post()等，但是不能当做函数使用 【context() ❌】
+            
+            // 创建axios函数，可以 instance({}) 但是instance不能【instance.get ❌】
+            let instance = Axios.prototype.request.bind(context); 
+            
+            // 将Axios原型对象上的方法和属性拷贝到axios函数上
+            Object.keys(Axios.prototype).forEach(key => {
+                instance[key] = Axios.prototype[key];
+            })
+            // 将Axios实例上的属性拷贝到axios函数上
+            Object.keys(context).forEach(key => {
+                instance[key] = context[key];
+            })
+
+            // 返回axios函数
+            return instance;
+        }
+
+        // axios就是createInstance函数返回的函数，所以axios就是由createInstance函数创建出来的
+        let axios = createInstance({ 
+            // 默认配置
+            baseURL: 'http://localhost:3000', 
+            timeout: 1000
+        })
+
+        // 测试发送请求看一下
+        axios.get({})
+        axios.post({})
+
+        // 打印一下我们自己手写的axios对象
+        console.dir(axios);
+    </script>
+</body>
+</html>
